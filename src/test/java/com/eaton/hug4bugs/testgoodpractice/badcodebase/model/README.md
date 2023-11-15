@@ -1,0 +1,2 @@
+Here is an example about how to ease test data creation when your input ([Person](../../../../../../../../../src/main/java/com/eaton/hug4bugs/testgoodpractice/badcodebase/model/Person.java)) has not been though to be used in tests.
+The solution implemented here is the Pattern Builder, or Wither : it let one use a fluent API to create the bean, on which you may add some more helpful methods that suits your needs. Have a look to [PersonBuilder](PersonBuilder.java) for the example.
