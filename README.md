@@ -24,6 +24,11 @@ Here are some leads to let you identify things that make you don't write tests. 
 
 # Additional words
 You may find useful to have a look to some "official" testing methodology such as :
-- TDD (Test Driven Development)
-- Golden Master
-- 
+- TDD (Test Driven Development), here is an (old) example : http://lets-code.orfjackal.net/
+- Golden Master : https://approvaltests.com/
+
+# Further links
+- Tips about refactoring (more things on web site root) : https://sourcemaking.com/refactoring/refactorings
+- Writing testable code : https://github.com/jptiancai/Guide-Writing-Testable-Code/blob/master/Guide-Writing%20Testable%20Code.pdf, original article was hereafter but is not more available http://misko.hevery.com/code-reviewers-guide/
+- About test naming : http://blog.orfjackal.net/2010/02/three-styles-of-naming-tests.html
+- Arguments about well-known reasons not to do TDD : http://dolszewski.com/testing/why-developers-dont-use-tdd/
