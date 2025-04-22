@@ -390,7 +390,7 @@ Since we want to protect existing code from being broken, we will keep the exist
 . create a unique instance of the class and make it static so it can be called by the static methods
 . make the original static methods invoke the unique instance
 . fix your class to inject an instance of the adapted class and use it instead of the old static invocation
-. finally, let's mark static methods `@Deprecated`
+. finally, let's mark static methods `@Deprecated`. Then you can plan a task to migrate the existing code that uses them.
 
 Those steps give the following result:
 [source, java, linenums]
@@ -452,8 +452,6 @@ public class FeatureManager {
     }
 }
 ----
-
-The good practice is to mark the static methods as `@Deprecated`. Then you can plan a task to migrate the existing code that uses them.
 
 ==== Implementing the test
 Hopefully, you get some testable code (thanks to the previous chapter or not !), so here come the practices to write your code.
