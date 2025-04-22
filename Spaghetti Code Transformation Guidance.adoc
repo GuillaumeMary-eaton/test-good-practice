@@ -45,7 +45,7 @@ The continuous refactoring process should "result" in a final state that would l
 [#final-state:-contexts-are-clearer]
 image::Final state, responsibilities are clearer and separated.png[Final state, width=800, align=center]
 
-=== It's a long journey, requiring habits review
+=== It's a long journey requiring new habits
 In next chapters we will focus on the day-to-day methodology. However, it's crucial to remember that fixing a spaghetti codebase is a *long process that requires a team effort*, as well as a *slow-down in feature delivery*, and, at least at the beginning, the need to review developer habits. In particular, developers need to train themselves on testing and refactoring, but the more they get trained, the more the process will be faster and more efficient, and your codebase tested.
 
 Moreover, the rework of the code mainly deals with decoupling things to establish clear single responsibilities, which globally means adding abstraction layers. Although adding abstraction layers seems sometimes overengineering, in particular when speaking about adding a facade-interface in front of a repository or service that doesn't do so much, it still provide some bonuses:
@@ -79,7 +79,7 @@ I highly suggest to *name the code according to features* or business rules at f
 Furthermore, pay particular attention to *unit-test method naming*. I encourage voting for a pattern that emphasizes what's being tested, for example:
 
 - the convention "<tested method name>_<input case>_<expectation>" fits the need,
-- a phrase stating what's being testing is suitable too.
+- a phrase stating what's being tested is suitable too.
 
 Here below are some examples for a method that keeps the "N-first" characters of a String, the method is named "head":
 
@@ -109,7 +109,7 @@ public void head_throws_a_null_pointer_exception_when_input_is_null() {
 }
 ----
 
-==== Where to push back code we're not responsible for?
+==== Where to push back code we are not responsible for?
 
 To make emerging a responsibility of methods and classes, the technique is to put aside the code that is not directly related to the core function of the class, which is *pushing the code "at the edge" of our context and responsibility*. Usually, it means adding a layer of abstraction between our context and one (or more) other context (the actual implementation). For this, you can help yourself with different Design Patterns like Delegation, Adapter, Facade, Inversion of Control, etc. All those techniques mainly consist in introducing:
 
@@ -129,7 +129,7 @@ Here below is a quick summary of the methodology:
 This is a high-level overview of the methodology which is close to the https://fr.wikipedia.org/wiki/Test_driven_development[Test Driven Development] approach, but applied to legacy code. In the next chapters we will explain each step in detail.
 
 ==== Capturing existing behavior
-Here may come the hardest part of the methodology: you need to *capture the behavior of your code*, which actually means *"surrounding it by some unit tests"*. That is known as https://en.wikipedia.org/wiki/Characterization_test[Characterization Test].
+Here may come the hardest part of the methodology: you need to *capture the behavior of your code*, which actually means *"surrounding it by some automated tests"*. That is known as https://en.wikipedia.org/wiki/Characterization_test[Characterization Test].
 However, often, due to its spaghetti form, the code is not ready to be tested, and you are stuck at writing the first test. Therefore, actually, the very first step should be to open-up the code a bit to make it testable. This can be done in several ways, and hereafter are the few I often use.
 
 ===== Open-up the code, but not too much
@@ -210,7 +210,7 @@ public class DummyClass {
 }
 ----
 
-After delegation, it gives you the following result:
+After Intellij delegation, it gives you the following result:
 
 [source, java, linenums]
 ----
@@ -341,7 +341,7 @@ public class PersonService {
 }
 ----
 <1> the default constructor still makes the instance to use the Configuration constant
-<2> this constructor allows changing the root path. If necessary we can limit its access by making in package-private and add a `@VisibleForTesting` annotation
+<2> this constructor allows changing the root path. If necessary we can limit its access by making it package-private and add a `@VisibleForTesting` annotation
 
 => We kept the initial behavior because we will have a non-arg constructor from which created instances will still use the constant. However, we enhanced the code since it's possible to pass another file path by using the secondary constructor.
 
@@ -384,12 +384,13 @@ Unfortunately, the check is made by a static call to the `FeatureManager` class 
 
 Furthermore, although `Mockito.mockStatic(..)` offers a quick solution for mocking static methods, I recommend addressing the issue of excessive static code by refactoring it to provide long-term benefits (overall design, testability). Let's see how to do it.
 
-Since we want to protect existing code from being broken, we will keep the existing static methods, thus, we will make them a static wrapper around a unique instance. Hence, we:
+Since we want to protect existing code from being broken, we will keep the existing static methods, thus, we will make them static wrappers around a unique instance. Hence, we:
 
-1. copy/paste the methods and make them non-static,
-2. create a unique instance of the class and make it static so it can be called by the static methods
-3. make the original static methods invoke the unique instance
-4. fix your class to inject an instance of the adapted class and use it instead of the old static invocation
+. copy/paste the methods and make them non-static,
+. create a unique instance of the class and make it static so it can be called by the static methods
+. make the original static methods invoke the unique instance
+. fix your class to inject an instance of the adapted class and use it instead of the old static invocation
+. finally, let's mark static methods `@Deprecated`
 
 Those steps give the following result:
 [source, java, linenums]
@@ -415,14 +416,20 @@ public class FeatureManager {
 
     private static final FeatureManager INSTANCE = new FeatureManager(); <2>
 
+    /**
+     * @deprecated inject an instance instead of using static code
+     */
+    @Deprecated <5>
     public static boolean isEnabled(String featureName) {
         return INSTANCE.isEnabled(featureName); <3>
     }
 
+	@Deprecated <5>
     public static void setEnabled(String featureName) {
         INSTANCE.setEnabled(featureName); <3>
     }
 
+	@Deprecated <5>
     public static void setDisabled(String featureName) {
         INSTANCE.setDisabled(featureName); <3>
     }
@@ -474,7 +481,8 @@ Hopefully, you get some testable code (thanks to the previous chapter or not !),
 
 * Avoid `@SpringBootTest` because this is no more a unit-test, hence:
 . you will have to configure all your application dependencies for your test environment,
-. your tests will be much more slower and more resource-intensive that unit-tests ones
+. your tests will be much more slower and more resource-intensive than unit-tests ones.
+
 It is preferable to use the `@ContextConfiguration(classes = {.. })` annotation, combined with an internal `@Configuration`-annotated class that would initiate some `@Bean`s
 
 ===== Data is key
@@ -482,6 +490,7 @@ While testing, data is the second nightmare after having testable code. Here are
 
 ====== Make your own Builders or Withers
 In case of a complex business model, a good practice is to help yourself through the Builder Pattern. You will find several ways of implementing it on the Internet, or ask Intellij to generate fluent getters, or use an existing framework such as Lombok to generate them. Meanwhile, all this only offers a fluent API and is hardly extensible. Therefore, I took the habit to implement mine and make it:
+
 - convert fields types to more suitable ones for testing,
 - provide a constructor with the mandatory parameters,
 - chain with other Builders for other entities and POJOs
@@ -565,7 +574,7 @@ public class DummyClassBuilder implements Builder<DummyClass> {
 <1> Builder fields matches target class
 <2> Constructor with mandatory parameters can be available even if target class doesn't have one
 <3> Create methods that help you clarify test code (and maybe business rules)
-<4> chain with other Builders of other entities and POJOs
+<4> Chain with other Builders of other entities and POJOs
 
 ====== Use JUnit 5 @ParameterizedTest
 Writing a test method per different input can be very time-consuming and cumbersome. JUnit 5 provides a way to simplify it with the `@ParameterizedTest` annotation. It allows you to run the same test method with different inputs (note that it also exists for Junit4 as an external library). Here is an example:
